@@ -1,0 +1,9 @@
+<h1>Archive</h1>
+<table class="archive">
+<% posts.each do |post| %>
+	<tr>
+		<td class="date"><%= post.created_at.strftime("%b %d %Y") %></td>
+		<td class="title"><a href="<%= post.url %>"><%= post.title %></a></td>
+	</tr>
+<% end %>
+</table>

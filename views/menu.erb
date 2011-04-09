@@ -1,0 +1,17 @@
+<div id='menu'>
+	<a href='/'>首页</a>
+	<a href='/projects'>项目</a>
+	<a href='/feed'>订阅</a>
+	<a href='/about'>作者</a>
+</div>
+
+<script>
+	var current_href = window.location.href;
+	var menu_div = document.getElementById('menu');
+	var arr      = menu_div.getElementsByTagName('a');
+	for(var i=0; i<arr.length; i++) {
+		if(arr[i].href == current_href) {
+		  arr[i].style.color = 'blue';
+		}
+	}
+</script>
