@@ -3,13 +3,11 @@
 	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 	<title><%= @title || Setting.title %></title>
 	<link href="/main.css" rel="stylesheet" type="text/css" />
+	<script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/1.4.0/jquery.min.js'></script>
 </head>
 <body>
 <div id="header">
-	<div id="logo2">
-		<h1><a href="/"><%= Setting.title %></a></h1>
-	</div>
-
+  <h1><a href="/"><%= Setting.title %></a></h1>
 	<%= partial(:menu, :title => Setting.title) %>
 </div>
 
@@ -19,7 +17,7 @@
 
 <div id="footer">
 	<p id="legal">
-	Design adapted from 
+	copyright: biti
 </div>
 </body>
 </html>

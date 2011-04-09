@@ -7,13 +7,60 @@
 </form>
 
 <div id="content">
-	<% notes.each do |note| %>
-	<div class="post">
-		<p class="meta"><small>
-		<div class="entry">
-			<%= note.body_html %>
-		</div>
+	<div id="notes">
 	</div>
-	<% end %>
 </div>
+
+<script type="text/javascript">/*<![CDATA[*/
+  function to_doml(attrs) {
+    var doml = "";
+    for (var key in attrs) {
+      doml += "|" + key + ":" + attrs[key].replace(/:/g, '\\;').replace(/\|/g, '\\,');
+		}
+	  return doml;
+	}
+								
+  function autosave() { 
+  	var get_value = function() { 
+		  var attrs = { 
+			  title: $('#title').val(), 
+				text: $('#text').val(), 
+				id: $('#nid')[0].value, 
+				last_pid: $('#last_pid')[0].value 
+			} 
+			return to_doml(attrs);
+		}, params = {
+		  autosave_key: 'note',
+		  autosave_value: get_value()
+		}
+		
+		if($('#title').val() != "" || $('#text').val() != "") {
+	    $.post_withck('/j/autosave/', params);
+		}
+	}
+
+	function list(notes) {
+		$.getJSON('/notes', function(data) {
+		  var items = [];
+
+      $.each(data, function(key, val) {
+		    items.push('<div style="padding:10px; margin-bottom:10px;background-color: rgb(255, 240, 70)"><div id="note-' + key + '" contenteditable="true">' + val.body + '</div></div>');
+		  });
+
+      console.log(items.join(''));
+		  var notes_html = $('<div/>', {'html': items.join('')});
+			var css = {
+        'width': '600px',
+			}
+			notes_html.css(css);
+			$(notes).append(notes_html);
+	  });
+	}
+
+  jQuery(function($){
+	  var notes = '#notes';
+	  list(notes);
+    setInterval('autosave()', 30000);
+  });
+/*]]>*/</script>
 

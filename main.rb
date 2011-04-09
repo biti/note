@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'sinatra'
+require 'json'
 
 $LOAD_PATH.unshift File.dirname(__FILE__) + '/vendor/sequel'
 require 'sequel'
@@ -45,7 +46,7 @@ end
 layout 'layout'
 
 get '/' do
-  redirect '/notes'
+  erb :index
 end
 
 get '/auth' do
@@ -74,10 +75,11 @@ post '/notes' do
 end
 
 get '/notes' do
-  auth
 	notes = Note.filter(:body.like("%#{params[:keyword]}%"))
 	            .order(:created_at.desc, :id.desc)
 							.limit(20)
-	erb :index, :locals => { :notes => notes }, :layout => false
+	content_type :json
+  puts notes.naked.all.to_json
+  notes.naked.all.to_json
 end
 

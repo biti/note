@@ -1,0 +1,15 @@
+body {
+  font-family: 'Lucida Grande', 'Helvetica', sans-serif;
+}
+
+.note {
+background-color: rgb(255, 240, 70);
+padding: 10px;
+width: 600px;
+margin-bottom: 10px;
+}
+
+.edit {
+outline: none;
+}
+
