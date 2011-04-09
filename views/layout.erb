@@ -1,17 +1,16 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
-	<title><%= @title || Blog.title %></title>
+	<title><%= @title || Setting.title %></title>
 	<link href="/main.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <div id="header">
 	<div id="logo2">
-		<h1><a href="/"><%= Blog.title %></a></h1>
-		<p>by <%= Blog.author %></p>
+		<h1><a href="/"><%= Setting.title %></a></h1>
 	</div>
 
-	<%= partial(:menu, :title => Blog.title) %>
+	<%= partial(:menu, :title => Setting.title) %>
 </div>
 
 <div id="content">
@@ -20,8 +19,7 @@
 
 <div id="footer">
 	<p id="legal">
-	Content by <%= Blog.author %> | 
-	Design adapted from <a href="http://www.freecsstemplates.org/preview/replenish">Replenish</a>
+	Design adapted from 
 </div>
 </body>
 </html>

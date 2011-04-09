@@ -4,20 +4,15 @@ require 'sinatra'
 $LOAD_PATH.unshift File.dirname(__FILE__) + '/vendor/sequel'
 require 'sequel'
 
-configure do
-	Sequel.connect(ENV['DATABASE_URL'] || 'sqlite://blog.db')
+$LOAD_PATH.unshift File.dirname(__FILE__)
+require 'setting'
 
-	require 'ostruct'
-	Blog = OpenStruct.new(
-		:title => '简单笔记',
-		:author => 'liuzihua',
-		:url_base => 'http://localhost:4567/',
-		:admin_password => 'change me',
-		:admin_cookie_key => 'scanty_admin',
-		:admin_cookie_value => '51d6d976913ace58',
-		:disqus_shortname => 'liuzihua'
-	)
+configure do
+	Sequel.connect(ENV['DATABASE_URL'] || 'sqlite://note.db')
 end
+
+$LOAD_PATH.unshift(File.dirname(__FILE__) + '/lib')
+require 'note'
 
 error do
 	e = request.env['sinatra.error']
@@ -26,114 +21,63 @@ error do
 	"Application error"
 end
 
-$LOAD_PATH.unshift(File.dirname(__FILE__) + '/lib')
-require 'post'
+error 403 do
+  'Access forbidden'
+end
 
 helpers do
-
 	def partial(template, locals = {})
 		erb(template, :layout => false, :locals => locals)
 	end
 
 	def admin?
-		request.cookies[Blog.admin_cookie_key] == Blog.admin_cookie_value
+		request.cookies[Setting.admin_cookie_key] == Setting.admin_cookie_value
 	end
 
 	def auth
-		stop [ 401, 'Not authorized' ] unless admin?
+    unless admin?
+		  status 401
+		  body 'Not authorized'	
+    end
 	end
-
 end
 
 layout 'layout'
 
-### Public
-
 get '/' do
-	posts = Post.reverse_order(:created_at).limit(10)
-	erb :index, :locals => { :posts => posts }, :layout => false
+  redirect '/notes'
 end
-
-get '/past/:year/:month/:day/:slug/' do
-	post = Post.filter(:slug => params[:slug]).first
-	stop [ 404, "Page not found" ] unless post
-	@title = post.title
-	erb :post, :locals => { :post => post }
-end
-
-get '/past/:year/:month/:day/:slug' do
-	redirect "/past/#{params[:year]}/#{params[:month]}/#{params[:day]}/#{params[:slug]}/", 301
-end
-
-get '/past' do
-	posts = Post.reverse_order(:created_at)
-	@title = "Archive"
-	erb :archive, :locals => { :posts => posts }
-end
-
-get '/past/tags/:tag' do
-	tag = params[:tag]
-	posts = Post.filter(:tags.like("%#{tag}%")).reverse_order(:created_at).limit(30)
-	@title = "Posts tagged #{tag}"
-	erb :tagged, :locals => { :posts => posts, :tag => tag }
-end
-
-get '/feed' do
-	@posts = Post.reverse_order(:created_at).limit(20)
-	content_type 'application/atom+xml', :charset => 'utf-8'
-	builder :feed
-end
-
-get '/about' do
-	erb :about
-end
-
-get '/projects' do
-	erb :projects
-end
-
-get '/rss' do
-	redirect '/feed', 301
-end
-
-### Admin
 
 get '/auth' do
 	erb :auth
 end
 
 post '/auth' do
-	response.set_cookie(Blog.admin_cookie_key, Blog.admin_cookie_value) if params[:password] == Blog.admin_password
-	redirect '/'
+	if params[:password] == Setting.admin_password
+	  response.set_cookie(Setting.admin_cookie_key, Setting.admin_cookie_value) 
+    redirect '/'
+	end
+	redirect '/auth'
 end
 
-get '/posts/new' do
+get '/notes/new' do
 	auth
-	erb :edit, :locals => { :post => Post.new, :url => '/posts' }
+	erb :edit, :locals => { :note => Note.new, :url => '/notes' }
 end
 
-post '/posts' do
+post '/notes' do
 	auth
-	post = Post.new :title => params[:title], :tags => params[:tags], :body => params[:body], :created_at => Time.now, :slug => Post.make_slug(params[:title])
-	post.save
-	redirect post.url
+	note = Note.new params
+	note.created_at = Time.now
+	note.save
+	redirect "/notes"
 end
 
-get '/past/:year/:month/:day/:slug/edit' do
-	auth
-	post = Post.filter(:slug => params[:slug]).first
-	stop [ 404, "Page not found" ] unless post
-	erb :edit, :locals => { :post => post, :url => post.url }
-end
-
-post '/past/:year/:month/:day/:slug/' do
-	auth
-	post = Post.filter(:slug => params[:slug]).first
-	stop [ 404, "Page not found" ] unless post
-	post.title = params[:title]
-	post.tags = params[:tags]
-	post.body = params[:body]
-	post.save
-	redirect post.url
+get '/notes' do
+  auth
+	notes = Note.filter(:body.like("%#{params[:keyword]}%"))
+	            .order(:created_at.desc, :id.desc)
+							.limit(20)
+	erb :index, :locals => { :notes => notes }, :layout => false
 end
 
