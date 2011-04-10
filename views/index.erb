@@ -1,8 +1,9 @@
 
 <form action="<%= url %>" method="get">
 <div class="postzoom">
+	<input type="button" id='new-note-href' value='new' style='height:30px;'/>
 	<input name="keyword" style='height:30px;width:300px;'/>
-	<input type="submit" value="Search" style='height:30px;'/>
+	<input type="submit" id='query-submit' value="Search" style='height:30px;'/>
 </div>
 </form>
 
@@ -12,55 +13,99 @@
 </div>
 
 <script type="text/javascript">/*<![CDATA[*/
-  function to_doml(attrs) {
-    var doml = "";
-    for (var key in attrs) {
-      doml += "|" + key + ":" + attrs[key].replace(/:/g, '\\;').replace(/\|/g, '\\,');
-		}
-	  return doml;
-	}
-								
-  function autosave() { 
-  	var get_value = function() { 
-		  var attrs = { 
-			  title: $('#title').val(), 
-				text: $('#text').val(), 
-				id: $('#nid')[0].value, 
-				last_pid: $('#last_pid')[0].value 
-			} 
-			return to_doml(attrs);
-		}, params = {
-		  autosave_key: 'note',
-		  autosave_value: get_value()
-		}
-		
-		if($('#title').val() != "" || $('#text').val() != "") {
-	    $.post_withck('/j/autosave/', params);
+
+
+jQuery(function($){
+  function save(jquery_note_editor) { 
+		if(jquery_note_editor.html() == "") 
+		  return;
+
+		if(jquery_note_editor.attr('id') == "new-editor") {
+		  console.log('create note');
+      $.ajax({
+			  url:      "/notes", 
+				type:     "POST",
+				dataType: "json",
+				data:     "body=" + jquery_note_editor.html(), 
+			  success: function(){
+				  console.log('success');
+					jquery_note_editor.attr('id', 'note-editor-' + 'xxx');
+		  	}
+			});
 		}
 	}
 
-	function list(notes) {
+	function show_note(note_html) {
+	  var note_element = $('<div/>').html(note_html)
+		                              .css({'background-color': 'rgb(255, 240, 70)',
+																	      'width': '600px',
+																	      'padding': '10px',
+																				'margin-bottom': '10px'});
+		return note_element;
+	}
+
+	function create_editable_div(id, html) {
+	  return $('<div/>')
+		         .attr('id', id)
+						 .attr('class', 'editable-div')
+						 .attr('contenteditable', 'true')
+						 .html(html)
+						 .click(function(){
+			         console.log($(this));
+		           last_editor = now_editor;
+		           now_editor  = $(this);
+			         console.log(last_editor);
+            	 console.log(now_editor);
+		         });
+
+	}
+
+	function new_note() {
+	  var id = 'new-editor';
+	  $('#notes').prepend(show_note(create_editable_div(id, '')));
+	}
+
+	list = function(notes) {
 		$.getJSON('/notes', function(data) {
-		  var items = [];
-
       $.each(data, function(key, val) {
-		    items.push('<div style="padding:10px; margin-bottom:10px;background-color: rgb(255, 240, 70)"><div id="note-' + key + '" contenteditable="true">' + val.body + '</div></div>');
+				var n = show_note(create_editable_div(key, val.body));
+			  $(notes).append(n);
 		  });
-
-      console.log(items.join(''));
-		  var notes_html = $('<div/>', {'html': items.join('')});
-			var css = {
-        'width': '600px',
-			}
-			notes_html.css(css);
-			$(notes).append(notes_html);
 	  });
 	}
 
-  jQuery(function($){
-	  var notes = '#notes';
-	  list(notes);
-    setInterval('autosave()', 30000);
-  });
+	$('#new-note-href').click(new_note);
+	var notes = '#notes';
+	list(notes);
+	//$('#query-submit').click(list(notes));
+
+	var now_editor;
+	var last_editor;
+
+  $('.editable-div').click(function(){
+		console.log($(this));
+	  last_editor = now_editor;
+	  now_editor  = $(this);
+		console.log(last_editor);
+		console.log(now_editor);
+	});
+
+  save_now_edit_note = function() {
+    if(now_editor) {
+	    save(now_editor);	
+		}
+  }
+
+	save_last_edit_note = function() {
+		
+	}
+
+  auto_save = function() {
+	  save_now_edit_note();
+	  save_last_edit_note();
+  }
+
+  setInterval('auto_save()', 3000);
+});
 /*]]>*/</script>
 
