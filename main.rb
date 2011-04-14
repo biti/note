@@ -75,9 +75,7 @@ post '/notes' do
 end
 
 get '/notes' do
-	notes = Note.filter(:body.like("%#{params[:keyword]}%"))
-	            .order(:created_at.desc, :id.desc)
-							.limit(20)
+	notes = Note.filter(:body.like("%#{params[:keyword]}%")).order(:created_at.desc, :id.desc).limit(20)
 	content_type :json
   puts notes.naked.all.to_json
   notes.naked.all.to_json
